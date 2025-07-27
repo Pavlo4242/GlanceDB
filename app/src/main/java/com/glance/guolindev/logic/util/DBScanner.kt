@@ -55,7 +55,7 @@ class DBScanner {
             for (file in listFiles) {
                 if (file.isDirectory) {
                     scanDBFilesUnderSpecificDir(file, internal, dbList)
-                } else if (file.isValidDBFile()) {
+                } else if (file.isValidDBFile() && !file.name.contains("journal")) {
                     dbList.add(DBFile(file.name, file.path, internal, Date(file.lastModified())))
                 }
             }
