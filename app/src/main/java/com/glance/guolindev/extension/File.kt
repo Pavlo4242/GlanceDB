@@ -21,6 +21,9 @@ fun DBFile.exists() = File(path).exists()
  * Check this file is valid SQLite db file or not.
  */
 fun File.isValidDBFile() = try {
+    if (name.endsWith("-wal") || name.endsWith("-shm")) {
+        return false
+    }
     val reader = FileReader(this)
     val buffer = CharArray(16)
     reader.read(buffer, 0, 16)
