@@ -47,10 +47,12 @@ class DBScanner {
         if (externalDataDir != null) {
             scanDBFilesUnderSpecificDir(externalDataDir, false, dbList)
         }
-        dbList.sortBy {
-            it.modifyTime
-        }
-        dbList.reversed() // We sort the dbList by reversed modify time. So lasted modified db file will be showed on top.
+        // Prioritize Room database files
+        dbList.sortWith(compareBy(
+            { !it.isRoomDatabase() }, // Room DBs first
+            { it.modifyTime } // Then by modify time
+        ))
+        dbList
     }
 
     /**
@@ -74,5 +76,4 @@ class DBScanner {
             }
         }
     }
-
 }
