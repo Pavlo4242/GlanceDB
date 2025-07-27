@@ -78,7 +78,12 @@ class DBHelper {
             if (cursor.moveToFirst()) {
                 do {
                     val tableName = cursor.getString(cursor.getColumnIndexOrThrow("tbl_name"))
-                    tableList.add(Table(tableName))
+                    // Skip Room internal tables
+                    if (!tableName.startsWith("room_") && 
+                        !tableName.startsWith("sqlite_") &&
+                        tableName != "android_metadata") {
+                        tableList.add(Table(tableName))
+                    }
                 } while (cursor.moveToNext())
             }
         }
