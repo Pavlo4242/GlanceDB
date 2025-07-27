@@ -1,0 +1,2401 @@
+ 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\Glance.kt --- 
+ 
+package com.glance.guolindev
+
+import android.content.Context
+
+/**
+ * Global singleton class to provide necessary data.
+ *
+ * @author guolin
+ * @since 2020/8/15
+ */
+object Glance {
+
+    /**
+     * Global application context.
+     */
+    lateinit var context: Context
+
+    fun initialize(_context: Context) {
+        context = _context.applicationContext
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\extension\Adapter.kt --- 
+ 
+package com.glance.guolindev.extension
+
+import androidx.recyclerview.widget.RecyclerView
+
+/**
+ * RecyclerView.Adapter extension methods.
+ *
+ * @author guolin
+ * @since 2020/10/11
+ */
+
+/**
+ * This method will be invoked in the [RecyclerView.Adapter.onBindViewHolder], to give first/last itemView
+ * the extra 10dp top/bottom margin to make the space between each item equal.
+ */
+fun RecyclerView.ViewHolder.setExtraMarginForFirstAndLastItem(firstItem: Boolean, lastItem: Boolean) {
+    if (firstItem || lastItem) {
+        // We give first/last itemView the extra 10dp top/bottom margin to make the space between each item equal.
+        val itemView = itemView
+        val params = itemView.layoutParams as RecyclerView.LayoutParams
+        if (firstItem) {
+            params.topMargin = params.topMargin + 10.dp
+        } else {
+            params.bottomMargin = params.bottomMargin + 10.dp
+        }
+    }
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\extension\File.kt --- 
+ 
+package com.glance.guolindev.extension
+
+import com.glance.guolindev.logic.model.DBFile
+import java.io.File
+import java.io.FileReader
+import java.lang.Exception
+
+/**
+ * File extension methods.
+ * @author guolin
+ * @since 2020/8/24
+ */
+
+/**
+ * Check the file represented by DBFile exists or not.
+ */
+fun DBFile.exists() = File(path).exists()
+
+/**
+ * Check this file is valid SQLite db file or not.
+ */
+fun File.isValidDBFile() = try {
+    val reader = FileReader(this)
+    val buffer = CharArray(16)
+    reader.read(buffer, 0, 16)
+    val str = String(buffer)
+    reader.close()
+    str == "SQLite format 3\u0000"
+} catch (e: Exception) {
+    e.printStackTrace()
+    false
+}
+
+/**
+ * Check the file represented by DBFile is valid SQLite db file or not.
+ */
+fun DBFile.isValidDBFile() = try {
+    val file = File(path)
+    file.isValidDBFile()
+} catch (e: Exception) {
+    e.printStackTrace()
+    false
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\extension\Number.kt --- 
+ 
+package com.glance.guolindev.extension
+
+import com.glance.guolindev.Glance
+import java.lang.StringBuilder
+
+/**
+ * Number extension methods.
+ *
+ * @author guolin
+ * @since 2020/9/24
+ */
+
+/**
+ * Convert dp to px.
+ */
+val Int.dp: Int
+    get() {
+        val scale = Glance.context.resources.displayMetrics.density
+        return (this * scale + 0.5).toInt()
+    }
+
+val Float.dp: Float
+    get() {
+        val scale = Glance.context.resources.displayMetrics.density
+        return (this * scale + 0.5).toFloat()
+    }
+
+val Double.dp: Double
+    get() {
+        val scale = Glance.context.resources.displayMetrics.density
+        return this * scale + 0.5
+    }
+
+/**
+ * Convert a number to a numeric string.
+ * e.g. 12365 wil be converted into 12,365
+ */
+fun Int.toNumericString(): String {
+    val chars = toString().toCharArray()
+    chars.reverse()
+    val builder = StringBuilder()
+    chars.forEachIndexed { index, c ->
+        if (index != 0 && index % 3 == 0 && c != '-') {
+            builder.append(",")
+        }
+        builder.append(c)
+    }
+    return builder.reverse().toString()
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\extension\View.kt --- 
+package com.glance.guolindev.extension
+
+import android.view.View
+import com.glance.guolindev.view.TableCellView
+
+/**
+ * View extension methods.
+ * @author guolin
+ * @since 2021/5/29
+ */
+
+/**
+ * Register a callback to be invoked when this view is double clicked. If this view is not
+ * clickable, it becomes clickable.
+ *
+ * @param listener The callback that will run
+ */
+fun TableCellView.setOnDoubleClickListener(listener: View.OnClickListener) {
+    setOnClickListener {
+        val clickTimeStamp = System.currentTimeMillis()
+        if (clickTimeStamp - firstClickTimeStamp <= 300) {
+            // This triggers double click event.
+            listener.onClick(this)
+        } else {
+            firstClickTimeStamp = clickTimeStamp;
+        }
+    }
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\helper\AndroidVersion.kt --- 
+ 
+package com.glance.guolindev.helper
+
+import android.os.Build
+
+/**
+ * Great utility to check Android version.
+ *
+ * @author guolin
+ * @since 2020/9/27
+ */
+object AndroidVersion {
+
+    fun hasJellyBean(): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1
+    }
+
+    fun hasJellyBeanMR1(): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1
+    }
+
+    fun hasKitkat(): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
+    }
+
+    fun hasLollipop(): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
+    }
+
+    fun hasMarshmallow(): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+    }
+
+    fun hasNougat(): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+    }
+
+    fun hasOreo(): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+    }
+
+    fun hasPie(): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+    }
+
+    fun hasQ(): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+    }
+
+    fun hasR(): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+    }
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\initializer\GlanceInitializer.kt --- 
+ 
+package com.glance.guolindev.initializer
+
+import android.content.Context
+import androidx.startup.Initializer
+import com.glance.guolindev.Glance
+
+/**
+ * Customize initializer to initialize Glance.
+ *
+ * @author guolin
+ * @since 2020/8/15
+ */
+class GlanceInitializer : Initializer<Unit> {
+
+    override fun create(context: Context) {
+        Glance.initialize(context)
+    }
+
+    override fun dependencies(): List<Class<out Initializer<*>>> {
+        return emptyList()
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\logic\model\Column.kt --- 
+ 
+package com.glance.guolindev.logic.model
+
+/**
+ * Data class represents a column in a table.
+ *
+ * @author guolin
+ * @since 2020/9/12
+ */
+data class Column(val name: String, val type: String, val isPrimaryKey: Boolean) {
+
+    /**
+     * The default width of column is 100.
+     */
+    var width = 100
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\logic\model\DBFile.kt --- 
+ 
+package com.glance.guolindev.logic.model
+
+import java.util.*
+
+/**
+ * Data class represents db files.
+ *
+ * @author guolin
+ * @since 2020/8/24
+ */
+data class DBFile(val name: String, val path: String, val internal: Boolean, val modifyTime: Date) {
+    fun isRoomDatabase(): Boolean {
+        return name.contains("translator_database") || 
+               name.contains("room") || 
+               name.contains("app_database")
+    }
+}
+ 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\logic\model\Resource.kt --- 
+ 
+package com.glance.guolindev.logic.model
+
+/**
+ * A generic class that holds a value with its success, error or loading status.
+ *
+ * @author guolin
+ * @since 2020/9/4
+ */
+data class Resource<T>(val status: Int, val data: T?, val message: String?) {
+
+    companion object {
+
+        const val SUCCESS = 0
+        const val ERROR = 1
+        const val LOADING = 2
+
+        fun <T> success(data: T) = Resource(SUCCESS, data, null)
+
+        fun <T> error(msg: String) = Resource<T>(ERROR, null, msg)
+
+        fun <T> loading() = Resource<T>(LOADING, null, null)
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\logic\model\Row.kt --- 
+ 
+package com.glance.guolindev.logic.model
+
+/**
+ * Data class represents a row in a table.
+ *
+ * @author guolin
+ * @since 2020/9/12
+ */
+data class Row(val lineNum: Int, val dataList: List<Data>)
+
+data class Data(var value: String, val columnName: String, val columnType: String, val isPrimaryKey: Boolean) 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\logic\model\Table.kt --- 
+ 
+package com.glance.guolindev.logic.model
+
+/**
+ * Data class represents a table in db file.
+ *
+ * @author guolin
+ * @since 2020/9/4
+ */
+data class Table(val name: String) 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\logic\model\UpdateBean.kt --- 
+ 
+package com.glance.guolindev.logic.model
+
+/**
+ * Use this bean to update database and observe update result.
+ * @author guolin
+ * @since 2021/8/3
+ */
+class UpdateBean(
+    val table: String,
+    val row: Row,
+    val position: Int,
+    val columnIndex: Int,
+    val updateValue: String
+) 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\logic\repository\DatabaseRepository.kt --- 
+ 
+package com.glance.guolindev.logic.repository
+
+import android.database.sqlite.SQLiteDatabase
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import com.glance.guolindev.logic.model.Column
+import com.glance.guolindev.logic.model.Data
+import com.glance.guolindev.logic.model.Row
+import com.glance.guolindev.logic.util.DBHelper
+import com.glance.guolindev.logic.util.DBPagingSource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
+import java.lang.RuntimeException
+
+/**
+ * We set page size to 50 in pager layer. So we only load 50 items by each page.
+ * And we only need to access to database only after a lot of pages, since the page in database is
+ * quite large.
+ */
+const val PAGE_SIZE = 50
+
+/**
+ * DatabaseRepository to communicate with ViewModels and database layer back end logic handler.
+ *
+ * @author guolin
+ * @since 2020/9/4
+ */
+class DatabaseRepository(private val dbHelper: DBHelper) {
+
+    private var openedDatabase: SQLiteDatabase? = null
+
+    /**
+     * Find all tables in a specific db file represented by the [dbPath] parameter.
+     * And sort them by the table name.
+     */
+    suspend fun getSortedTablesInDB(dbPath: String) = withContext(Dispatchers.Default) {
+        openedDatabase = dbHelper.openDatabase(dbPath)
+        openedDatabase?.let { db ->
+            val tableList = dbHelper.getTablesInDB(db)
+            tableList.sortedBy { it.name }
+        } ?: emptyList()
+    }
+
+    /**
+     * Get all columns in a specific table, and return them in a List.
+     */
+    suspend fun getColumnsInTable(table: String) = withContext(Dispatchers.Default) {
+        openedDatabase?.let { db ->
+            dbHelper.getColumnsInTable(db, table)
+        } ?: throw RuntimeException("Opened database is null.")
+    }
+
+    /**
+     * Close the opened databases and makes [openedDatabase] null.
+     */
+    suspend fun closeDatabase() = withContext(Dispatchers.Default) {
+        openedDatabase?.close()
+        openedDatabase = null
+    }
+
+    /**
+     * Update specific column data with specific row by primary key.
+     */
+    suspend fun updateDataInTableByPrimaryKey(
+        table: String, primaryKey: Data,
+        updateColumnName: String, updateColumnType: String, updateValue: String
+    ) = withContext(Dispatchers.Default) {
+        openedDatabase?.let { db ->
+            dbHelper.updateDataInTableByPrimaryKey(
+                db,
+                table,
+                primaryKey,
+                updateColumnName,
+                updateColumnType,
+                updateValue
+            )
+        } ?: throw RuntimeException("Opened database is null.")
+    }
+
+    /**
+     * Get the stream that could to load data by [DBPagingSource].
+     */
+    fun getDataFromTableStream(table: String, columns: List<Column>): Flow<PagingData<Row>> {
+        openedDatabase?.let { db ->
+            return Pager(
+                config = PagingConfig(PAGE_SIZE),
+                pagingSourceFactory = { DBPagingSource(dbHelper, db, table, columns) }).flow
+        } ?: throw RuntimeException("Opened database is null.")
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\logic\repository\FileRepository.kt --- 
+ 
+package com.glance.guolindev.logic.repository
+
+import android.content.Context
+import com.glance.guolindev.Glance
+import com.glance.guolindev.logic.model.DBFile
+import com.glance.guolindev.logic.util.DBScanner
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+private const val GLANCE_DB_CACHE = "glance_library_db_cache"
+
+private const val GLANCE_CACHED_DATABASES = "glance_library_cached_databases"
+
+/**
+ * DBRepository to communicate with ViewModels and .db files layer back end logic handler.
+ *
+ * @author guolin
+ * @since 2020/8/25
+ */
+class FileRepository(private val dbScanner: DBScanner) {
+
+    /**
+     * Load db files from cache. This will show the cached db files on ui immediately.
+     */
+    suspend fun loadCachedDbFiles(): List<DBFile> = withContext(Dispatchers.Default) {
+        val prefs = Glance.context.getSharedPreferences(GLANCE_DB_CACHE, Context.MODE_PRIVATE)
+        val cachedDatabases = prefs.getString(GLANCE_CACHED_DATABASES, null)
+        if (cachedDatabases != null) {
+            val listType = object : TypeToken<ArrayList<DBFile>>(){}.type
+            val dbList: List<DBFile> = Gson().fromJson(cachedDatabases, listType)
+            dbList
+        } else {
+            emptyList()
+        }
+    }
+
+    /**
+     * Scan all db files of the current app. Including internal storage and external storage.
+     * Use Flow to emits the db files once find one.
+     * @return Flow object to collect and get each db file.
+     */
+    suspend fun scanAllDBFiles() = dbScanner.scanAllDBFiles()
+
+    /**
+     * Save the latest db list into cache.
+     */
+    suspend fun cacheDbFiles(dbList: List<DBFile>) = withContext(Dispatchers.Default) {
+        val editor = Glance.context.getSharedPreferences(GLANCE_DB_CACHE, Context.MODE_PRIVATE).edit()
+        editor.putString(GLANCE_CACHED_DATABASES, Gson().toJson(dbList))
+        editor.apply()
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\logic\typechange\BlobMap.kt --- 
+ 
+package com.glance.guolindev.logic.typechange
+
+import java.util.*
+
+/**
+ * This class deals with blob type.
+ *
+ * @author guolin
+ * @since 2020/11/8
+ */
+
+const val BLOB_FIELD_TYPE = "BLOB"
+
+class BlobMap : OrmMap {
+
+    override fun columnType2FieldType(columnType: String): String? {
+        return when(columnType.toUpperCase(Locale.US)) {
+            "BLOB" -> BLOB_FIELD_TYPE
+            else -> null
+        }
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\logic\typechange\IntegerMap.kt --- 
+ 
+package com.glance.guolindev.logic.typechange
+
+import java.util.*
+
+/**
+ * This class deals with integer type.
+ *
+ * @author guolin
+ * @since 2020/11/8
+ */
+
+const val INTEGER_FIELD_TYPE = "INTEGER"
+
+class IntegerMap : OrmMap {
+
+    private val integerTypeList = listOf("INT", "INTEGER", "TINYINT", "SMALLINT", "MEDIUMINT", "BIGINT",
+            "UNSIGNED BIG INT", "INT2", "INT8")
+
+    override fun columnType2FieldType(columnType: String): String? {
+        return when (columnType.toUpperCase(Locale.US)) {
+            in integerTypeList -> INTEGER_FIELD_TYPE
+            else -> null
+        }
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\logic\typechange\NullMap.kt --- 
+ 
+package com.glance.guolindev.logic.typechange
+
+import java.util.*
+
+/**
+ * This class deals with null type.
+ *
+ * @author guolin
+ * @since 2020/11/8
+ */
+
+const val NULL_FIELD_TYPE = "NULL"
+
+class NullMap : OrmMap {
+
+    override fun columnType2FieldType(columnType: String): String? {
+        return when(columnType.toUpperCase(Locale.US)) {
+            "null" -> NULL_FIELD_TYPE
+            else -> null
+        }
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\logic\typechange\OrmMap.kt --- 
+ 
+package com.glance.guolindev.logic.typechange
+
+/**
+ * This is the interface to map the object field types to database column types. The purpose of this
+ * interface is to define a method, and let all subclasses implement it. Each subclass deals the
+ * mapping work for one type and each subclass will do their own logic to finish the mapping job.
+ *
+ * The mapping rule should follow the SQLite3 data types definition in this link:
+ * https://www.sqlite.org/datatype3.html
+ *
+ * @author guolin
+ * @since 2020/11/7
+ */
+interface OrmMap {
+
+    /**
+     * Subclasses implement this method to to get corresponding field type with column type.
+     */
+    fun columnType2FieldType(columnType: String): String?
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\logic\typechange\RealMap.kt --- 
+ 
+package com.glance.guolindev.logic.typechange
+
+import java.util.*
+
+/**
+ * This class deals with real type.
+ *
+ * @author guolin
+ * @since 2020/11/8
+ */
+
+const val REAL_FIELD_TYPE = "REAL"
+
+class RealMap : OrmMap {
+
+    private val realTypeList = listOf("REAL", "DOUBLE", "DOUBLE PRECISION", "FLOAT")
+
+    override fun columnType2FieldType(columnType: String): String? {
+        return when (columnType.toUpperCase(Locale.US)) {
+            in realTypeList -> REAL_FIELD_TYPE
+            else -> null
+        }
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\logic\typechange\TextMap.kt --- 
+ 
+package com.glance.guolindev.logic.typechange
+
+import java.util.*
+
+/**
+ * This class deals with text type.
+ *
+ * @author guolin
+ * @since 2020/11/8
+ */
+
+const val TEXT_FIELD_TYPE = "TEXT"
+
+class TextMap : OrmMap {
+
+    override fun columnType2FieldType(columnType: String): String? {
+        val upperColumnType = columnType.toUpperCase(Locale.US)
+        return when {
+            upperColumnType == "TEXT" ||
+            upperColumnType == "CLOB" ||
+            upperColumnType.startsWith("CHARACTER") ||
+            upperColumnType.startsWith("VARCHAR") ||
+            upperColumnType.startsWith("VARYING") ||
+            upperColumnType.startsWith("NCHAR") ||
+            upperColumnType.startsWith("NATIVE CHARACTER") ||
+            upperColumnType.startsWith("NVARCHAR") -> TEXT_FIELD_TYPE
+            else -> null
+        }
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\logic\util\DBHelper.kt --- 
+ 
+package com.glance.guolindev.logic.util
+
+import android.content.ContentValues
+import android.database.sqlite.SQLiteDatabase
+import android.widget.TextView
+import com.glance.guolindev.Glance
+import com.glance.guolindev.extension.dp
+import com.glance.guolindev.logic.model.Column
+import com.glance.guolindev.logic.model.Data
+import com.glance.guolindev.logic.model.Row
+import com.glance.guolindev.logic.model.Table
+import com.glance.guolindev.logic.typechange.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlin.math.max
+import kotlin.math.min
+
+/**
+ * We set a quite large number of page in database layer.
+ * 1001 is a weird number, but it can let us have a more accurate measure for each column width.
+ * If the column is integer with increment number, 1001 can measure the enough space for 9999 records.
+ * 1000 is more decent number, but if the record based on 0, it can only measure the space for 999 records.
+ */
+const val PAGE_SIZE = 1001
+
+/**
+ * Helper class with all necessary database operations.
+ *
+ * @author guolin
+ * @since 2020/9/4
+ */
+class DBHelper {
+
+    /**
+     * The max width of a column can be.
+     */
+    private val maxColumnWidth = 300.dp
+
+    /**
+     * The min width of a column can be.
+     */
+    private val minColumnWidth = 20.dp
+
+    /**
+     * All the supported mapping type rules in the array.
+     */
+    private val typeChangeRules = arrayOf(IntegerMap(), TextMap(), RealMap(), BlobMap(), NullMap())
+
+    /**
+     * Open a database by the passed db file path and return SQLiteDatabase instance to operate this db file.
+     */
+    suspend fun openDatabase(path: String): SQLiteDatabase = withContext(Dispatchers.Default) {
+        SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READWRITE)
+    }
+
+    /**
+     * Find all tables by the [db] parameter.
+     */
+    suspend fun getTablesInDB(db: SQLiteDatabase) = withContext(Dispatchers.Default) {
+        val tableList = ArrayList<Table>()
+        db.rawQuery("select * from sqlite_master where type = ?", arrayOf("table")).use { cursor ->
+            if (cursor.moveToFirst()) {
+                do {
+                    val tableName = cursor.getString(cursor.getColumnIndexOrThrow("tbl_name"))
+                    // Skip Room internal tables
+                    if (!tableName.startsWith("room_") && 
+                        !tableName.startsWith("sqlite_") &&
+                        tableName != "android_metadata") {
+                        tableList.add(Table(tableName))
+                    }
+                } while (cursor.moveToNext())
+            }
+        }
+        tableList
+    }
+
+    /**
+     * Get all columns in a specific table, and return them in a List.
+     */
+    suspend fun getColumnsInTable(db: SQLiteDatabase, table: String) = withContext(Dispatchers.Default) {
+        val columnList = ArrayList<Column>()
+        val getColumnsSQL = "pragma table_info($table)"
+        db.rawQuery(getColumnsSQL, null)?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                do {
+                    val columnName = cursor.getString(cursor.getColumnIndexOrThrow("name"))
+                    val columnType = cursor.getString(cursor.getColumnIndexOrThrow("type"))
+                    val primaryKey = cursor.getInt(cursor.getColumnIndexOrThrow("pk"))
+                    val column = Column(columnName, columnType, primaryKey == 1)
+                    columnList.add(column)
+                } while (cursor.moveToNext())
+            }
+        }
+        measureColumnsWidth(db, table, columnList)
+        columnList
+    }
+
+    /**
+     * Load data in a table by page. Need to specify which columns data need to load.
+     * Then we can load the data into a rowList and match the position for the [columns] param.
+     */
+    suspend fun loadDataInTable(db: SQLiteDatabase, table: String, page: Int, columns: List<Column>) = withContext(Dispatchers.Default) {
+        val rowList = ArrayList<Row>()
+        val offset = page * PAGE_SIZE
+        val limit = "${offset},${PAGE_SIZE}"
+        db.query(table, null, null, null, null, null, null, limit)?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                var count = 1
+                do {
+                    val dataList = ArrayList<Data>()
+                    for (column in columns) {
+                        val columnIndex = cursor.getColumnIndexOrThrow(column.name)
+                        var fieldType = ""
+                        for (rule in typeChangeRules) {
+                            val type = rule.columnType2FieldType(column.type)
+                            if (type != null) {
+                                fieldType = type
+                                break
+                            }
+                        }
+                        val value =  if (cursor.isNull(columnIndex)) {
+                            "<NULL>"
+                        } else {
+                            when(fieldType) {
+                                TEXT_FIELD_TYPE -> cursor.getString(columnIndex)
+                                INTEGER_FIELD_TYPE -> cursor.getLong(columnIndex).toString()
+                                REAL_FIELD_TYPE -> cursor.getDouble(columnIndex).toString()
+                                BLOB_FIELD_TYPE -> "<Binary Data>"
+                                NULL_FIELD_TYPE -> "<NULL>"
+                                // This column type is not supported. Glance will use the getString way to read value from this column.
+                                else -> cursor.getString(columnIndex)
+                            }
+                        }
+                        dataList.add(Data(value, column.name, fieldType, column.isPrimaryKey))
+                    }
+                    val lineNum = offset + count // This is the line number of current row, starting by 1.
+                    rowList.add(Row(lineNum, dataList))
+                    count++
+                } while (cursor.moveToNext())
+            }
+        }
+        rowList
+    }
+
+    /**
+     * Update specific column data with specific row by primary key.
+     */
+    suspend fun updateDataInTableByPrimaryKey(
+        db: SQLiteDatabase, table: String, primaryKey: Data,
+        updateColumnName: String, updateColumnType: String, updateValue: String
+    ) = withContext(Dispatchers.Default) {
+        val values = ContentValues()
+        values.put(updateColumnName, updateValue)
+        var fieldType = ""
+        for (rule in typeChangeRules) {
+            val type = rule.columnType2FieldType(updateColumnType)
+            if (type != null) {
+                fieldType = type
+                break
+            }
+        }
+        when(fieldType) {
+            INTEGER_FIELD_TYPE -> values.put(updateColumnName, updateValue.toInt())
+            REAL_FIELD_TYPE -> values.put(updateColumnName, updateValue.toDouble())
+            else -> values.put(updateColumnName, updateValue)
+        }
+        db.update(table, values, "${primaryKey.columnName} = ?", arrayOf(primaryKey.value))
+    }
+
+    /**
+     * Measure the proper width of each column. They should just wrap the text content, but they can't
+     * be smaller than the min width or larger than the max width.
+     */
+    private suspend fun measureColumnsWidth(db: SQLiteDatabase, table: String, columns: List<Column>) = withContext(Dispatchers.Default) {
+        val paint = TextView(Glance.context).paint
+        for (column in columns) {
+            var columnWidth = paint.measureText(column.name).toInt()
+            columnWidth = min(columnWidth, maxColumnWidth)
+            columnWidth = max(columnWidth, minColumnWidth)
+            column.width = columnWidth
+        }
+        val rowList = loadDataInTable(db, table, 0, columns) // load page 0 data
+        // we iterate the first page data and evaluate the proper width of each column.
+        for (row in rowList) {
+            row.dataList.forEachIndexed { index, data ->
+                val column = columns[index]
+                var columnWidth = paint.measureText(data.value).toInt()
+                columnWidth = min(columnWidth, maxColumnWidth)
+                columnWidth = max(columnWidth, minColumnWidth)
+                if (columnWidth > column.width) {
+                    column.width = columnWidth
+                }
+            }
+        }
+    }
+
+}
+ 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\logic\util\DBPagingSource.kt --- 
+ 
+package com.glance.guolindev.logic.util
+
+import android.database.sqlite.SQLiteDatabase
+import androidx.paging.PagingSource
+import androidx.paging.PagingState
+import com.glance.guolindev.logic.model.Column
+import com.glance.guolindev.logic.model.Row
+import java.lang.Exception
+
+/**
+ * We need to use a DBPagingSource and inherits from PagingSource to implements the paging function with paging3 library.
+ *
+ * @author guolin
+ * @since 2020/9/17
+ */
+class DBPagingSource(private val dbHelper: DBHelper,
+                     private val db: SQLiteDatabase,
+                     private val table: String, private
+                     val columns: List<Column>) : PagingSource<Int, Row>() {
+
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Row> {
+        return try {
+            val page = params.key ?: 0 // set page 0 as default
+            val rowData = dbHelper.loadDataInTable(db, table, page, columns)
+            val prevKey = if (page > 0) page - 1 else null
+            val nextKey = if (rowData.isNotEmpty()) page + 1 else null
+            LoadResult.Page(rowData, prevKey, nextKey)
+        } catch (e: Exception) {
+            LoadResult.Error(e)
+        }
+    }
+
+    override fun getRefreshKey(state: PagingState<Int, Row>): Int? = null
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\logic\util\DBScanner.kt --- 
+ 
+package com.glance.guolindev.logic.util
+
+import com.glance.guolindev.Glance
+import com.glance.guolindev.extension.isValidDBFile
+import com.glance.guolindev.logic.model.DBFile
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.util.*
+import kotlin.collections.ArrayList
+
+/**
+ * A utility scanner to scan internal and external storage of current app. Find all db files.
+ *
+ * @author guolin
+ * @since 2020/8/15
+ */
+class DBScanner {
+
+    /**
+     * Scan all db files of the current app. Including internal storage and external storage.
+     * @return A db list contains all db files under the app.
+     */
+    suspend fun scanAllDBFiles() = withContext(Dispatchers.Default) {
+        val dbList = ArrayList<DBFile>()
+        val dataDir = Glance.context.filesDir.parentFile
+        if (dataDir != null) {
+            scanDBFilesUnderSpecificDir(dataDir, true, dbList)
+        }
+        val externalDataDir = Glance.context.getExternalFilesDir("")?.parentFile
+        if (externalDataDir != null) {
+            scanDBFilesUnderSpecificDir(externalDataDir, false, dbList)
+        }
+        // Prioritize Room database files
+        dbList.sortWith(compareBy(
+            { !it.isRoomDatabase() }, // Room DBs first
+            { it.modifyTime } // Then by modify time
+        ))
+        dbList
+    }
+
+    /**
+     * Scan all the files under specific directory recursively.
+     * @param dir
+     *          Base directory to scan.
+     * @param internal
+     *          Indicates this is internal storage or external storage. True means internal, false means external.
+     * @param dbList
+     *          A db list contains all db files under the specific dir.
+     */
+    private fun scanDBFilesUnderSpecificDir(dir: File, internal: Boolean, dbList: ArrayList<DBFile>) {
+        val listFiles = dir.listFiles()
+        if (listFiles != null) {
+            for (file in listFiles) {
+                if (file.isDirectory) {
+                    scanDBFilesUnderSpecificDir(file, internal, dbList)
+                } else if (file.isValidDBFile()) {
+                    dbList.add(DBFile(file.name, file.path, internal, Date(file.lastModified())))
+                }
+            }
+        }
+    }
+}
+ 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\logic\util\ServiceLocator.kt --- 
+ 
+package com.glance.guolindev.logic.util
+
+import com.glance.guolindev.logic.repository.FileRepository
+import com.glance.guolindev.logic.repository.DatabaseRepository
+
+/**
+ * ServiceLocator to provide instances that no one should create.
+ * Basically this work should be done by a DI library like hilt, but since we do not charge the Application class, so just keep it simple by a ServiceLocator.
+ *
+ * @author guolin
+ * @since 2020/9/4
+ */
+object ServiceLocator {
+
+    private val dbScanner = DBScanner()
+
+    private val dbHelper = DBHelper()
+
+    private val databaseRepository = DatabaseRepository(dbHelper)
+
+    fun provideDBRepository() = FileRepository(dbScanner)
+
+    fun provideTableRepository() = databaseRepository
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\ui\data\DataActivity.kt --- 
+ 
+package com.glance.guolindev.ui.data
+
+import android.content.Context
+import android.content.Intent
+import android.graphics.Typeface
+import android.os.Bundle
+import android.view.Gravity
+import android.view.MenuItem
+import android.view.View
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.paging.LoadState
+import androidx.recyclerview.widget.ConcatAdapter
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.glance.guolindev.Glance
+import com.glance.guolindev.R
+import com.glance.guolindev.databinding.GlanceLibraryActivityDataBinding
+import com.glance.guolindev.extension.dp
+import com.glance.guolindev.logic.model.Column
+import com.glance.guolindev.logic.model.Resource
+import com.glance.guolindev.logic.model.Row
+import com.glance.guolindev.logic.model.UpdateBean
+import com.glance.guolindev.logic.typechange.BLOB_FIELD_TYPE
+import com.glance.guolindev.view.TableCellView
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+import kotlin.concurrent.thread
+
+/**
+ * Data layer of Activity, which shows data from a table by page.
+ *
+ * @author guolin
+ * @since 2020/9/13
+ */
+class DataActivity : AppCompatActivity() {
+
+    private val viewModel by lazy { ViewModelProvider(this, DataViewModelFactory()).get(DataViewModel::class.java) }
+
+    private lateinit var binding: GlanceLibraryActivityDataBinding
+
+    /**
+     * The adapter for the main data of table.
+     */
+    private lateinit var adapter: DataAdapter
+
+    /**
+     * The adapter for the footer view.
+     */
+    private lateinit var footerAdapter: DataFooterAdapter
+
+    /**
+     * The table which need to show its data.
+     */
+    private lateinit var table: String
+
+    /**
+     * Indicates the load is started or not.
+     */
+    private var loadStarted = false
+
+    /**
+     * Dialog with EditText to modify value.
+     */
+    private var editDialog: AlertDialog? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = GlanceLibraryActivityDataBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        val tableName = intent.getStringExtra(TABLE_NAME)
+        if (tableName == null) {
+            Toast.makeText(this, R.string.glance_library_table_name_is_null, Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+        table = tableName
+
+        setSupportActionBar(binding.toolbar)
+        val actionBar = supportActionBar
+        actionBar?.setDisplayHomeAsUpEnabled(true)
+        actionBar?.title = table
+
+        val layoutManager = LinearLayoutManager(this)
+        binding.recyclerView.layoutManager = layoutManager
+
+        viewModel.errorLiveData.observe(this) {
+            Toast.makeText(
+                this,
+                it?.message
+                    ?: Glance.context.getString(R.string.glance_library_uncaught_exception_happened),
+                Toast.LENGTH_SHORT
+            ).show()
+            binding.progressBar.visibility = View.INVISIBLE
+        }
+        viewModel.columnsLiveData.observe(this) {
+            initAdapter(table, it)
+        }
+        viewModel.updateDataLiveData.observe(this) {
+            when (it.status) {
+                Resource.ERROR -> {
+                    Toast.makeText(this, it.message, Toast.LENGTH_LONG).show()
+                }
+                Resource.SUCCESS -> {
+                    val updateBean = it.data!!
+                    updateBean.row.dataList[updateBean.columnIndex].value = updateBean.updateValue
+                    adapter.notifyItemChanged(updateBean.position)
+                    Toast.makeText(this, R.string.glance_library_update_succeeded, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+        if (viewModel.columnsLiveData.value == null) {
+            viewModel.getColumnsInTable(table)
+        }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            android.R.id.home -> {
+                finish()
+                return true
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        editDialog?.let {
+            if (it.isShowing) {
+                it.dismiss()
+            }
+        }
+    }
+
+    /**
+     * Show the dialog with existing value from db, and provide a editable way to change it.
+     */
+    fun showModifyValueDialog(position: Int, row: Row, columnIndex: Int) {
+        if (!::adapter.isInitialized) return
+        require(columnIndex >= 0) {
+            "You're not editing a valid column with index -1."
+        }
+        val updateColumnType = row.dataList[columnIndex].columnType
+        if (updateColumnType == BLOB_FIELD_TYPE) {
+            Toast.makeText(this, R.string.glance_library_blob_column_can_not_be_modified, Toast.LENGTH_SHORT).show()
+            return
+        }
+        editDialog = AlertDialog.Builder(this).apply {
+            setView(R.layout.glance_library_dialog_edit_text)
+            setPositiveButton(R.string.glance_library_apply) { _, _ ->
+                applyValueModification(position, row, columnIndex)
+            }
+            setNegativeButton(R.string.glance_library_cancel, null)
+        }.create()
+        editDialog?.let {
+            it.show()
+            it.getButton(AlertDialog.BUTTON_POSITIVE)
+                .setTextColor(ContextCompat.getColor(this, R.color.glance_library_positive_button))
+            it.getButton(AlertDialog.BUTTON_NEGATIVE)
+                .setTextColor(ContextCompat.getColor(this, R.color.glance_library_negative_button))
+            val dialogEditText = it.findViewById<EditText>(R.id.dialog_edit_text)
+            require(dialogEditText != null) {
+                "dialogEditText shouldn't be null at this time."
+            }
+            dialogEditText.setText(row.dataList[columnIndex].value)
+            dialogEditText.requestFocusFromTouch()
+        }
+    }
+
+    /**
+     * Init the adapter for displaying data in RecyclerView.
+     */
+    private fun initAdapter(table: String, columns: List<Column>) {
+        // It may cost some time for calculating row width, so we put it into thread.
+        thread {
+            var rowWidth = 0
+            for (column in columns) {
+                rowWidth += column.width
+            }
+            rowWidth += columns.size * 20.dp // we always have 20dp extra space for each column. 5dp for start. 15dp for end.
+            binding.recyclerView.post {
+                // Make sure we are back to the main thread and we can get the width of HorizontalScroller now.
+                rowWidth = rowWidth.coerceAtLeast(binding.horizontalScroller.width)
+                buildTableTitle(columns, rowWidth)
+                adapter = DataAdapter(this, columns, rowWidth)
+                footerAdapter = DataFooterAdapter(rowWidth, binding.horizontalScroller.width) {
+                    adapter.itemCount
+                }
+                adapter.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
+                // Concat DataAdapter and DataFooterAdapter which can show how many records loaded at bottom.
+                binding.recyclerView.adapter = ConcatAdapter(adapter, footerAdapter)
+                adapter.addLoadStateListener { loadState ->
+                    when (loadState.refresh) {
+                        is LoadState.NotLoading -> {
+                            binding.horizontalScroller.visibility = View.VISIBLE
+                            binding.progressBar.visibility = View.INVISIBLE
+                            if (loadStarted) {
+                                // This case may be invoked before loading start.
+                                // We only display footer view after first loading by paging3.
+                                // Otherwise RecyclerView will scroll to the bottom when load finished which we don't want to see.
+                                footerAdapter.displayFooter()
+                            }
+                        }
+                        is LoadState.Loading -> {
+                            binding.horizontalScroller.visibility = View.INVISIBLE
+                            binding.progressBar.visibility = View.VISIBLE
+                        }
+                        is LoadState.Error -> {
+                            binding.horizontalScroller.visibility = View.VISIBLE
+                            binding.progressBar.visibility = View.INVISIBLE
+                            Toast.makeText(this, R.string.glance_library_something_is_wrong_when_loading_data,
+                                Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+                // Listener the scroll amount by the HorizontalScroller and notify it to DataFooterAdapter
+                // to make the text on footer view showed in center.
+                binding.horizontalScroller.setScrollObserver {
+                    footerAdapter.notifyScrollXChanged(it)
+                }
+                loadDataFromTable(table, columns)
+            }
+        }
+    }
+
+    /**
+     * Begin to load data from table with the specific columns.
+     */
+    private fun loadDataFromTable(table: String, columns: List<Column>) {
+        lifecycleScope.launch {
+            viewModel.loadDataFromTable(table, columns).collect {
+                loadStarted = true
+                adapter.submitData(it)
+                // This line will never reach. Don't do anything below.
+            }
+            // This line will never reach. Don't do anything below.
+        }
+    }
+
+    /**
+     * Build a TableRowLayout as a row to show the columns of a table as title.
+     */
+    private fun buildTableTitle(columns: List<Column>, rowWidth: Int) {
+        val param = binding.rowTitleLayout.layoutParams
+        param.width = rowWidth
+        columns.forEachIndexed { index, column ->
+            val tableCellView = buildTableCellView(column)
+            tableCellView.columnIndex = index // Indicate the column index of the row.
+            // We let each column has 20dp extra space, to make it look better.
+            val layoutParam = LinearLayout.LayoutParams(column.width + 20.dp, LinearLayout.LayoutParams.MATCH_PARENT)
+            binding.rowTitleLayout.addView(tableCellView, layoutParam)
+        }
+        binding.rowTitleLayout.setBackgroundColor(ContextCompat.getColor(this, R.color.glance_library_table_even_row_bg))
+    }
+
+    /**
+     * Build a TableCellView widget as a table cell to show data in title.
+     */
+    private fun buildTableCellView(column: Column): TableCellView {
+        val tableCellView = TableCellView(this)
+        tableCellView.gravity = Gravity.CENTER_VERTICAL or Gravity.CENTER_HORIZONTAL
+        tableCellView.setTextColor(ContextCompat.getColor(this, R.color.glance_library_table_text))
+        tableCellView.typeface = Typeface.DEFAULT_BOLD
+        tableCellView.text = column.name
+        return tableCellView
+    }
+
+    /**
+     * Apply the value modification into database, then update the UI with new value.
+     */
+    private fun applyValueModification(position: Int, row: Row, columnIndex: Int) = editDialog?.let {
+        val dialogEditText = it.findViewById<EditText>(R.id.dialog_edit_text)
+        require(dialogEditText != null) {
+            "dialogEditText shouldn't be null at this time."
+        }
+        val newValue = dialogEditText.text.toString()
+        viewModel.updateDataInTable(UpdateBean(table, row, position, columnIndex, newValue))
+    }
+
+    companion object {
+
+        const val TABLE_NAME = "table_name"
+
+        fun actionOpenTable(context: Context, tableName: String) {
+            val intent = Intent(context, DataActivity::class.java)
+            intent.putExtra(TABLE_NAME, tableName)
+            context.startActivity(intent)
+        }
+
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\ui\data\DataAdapter.kt --- 
+ 
+package com.glance.guolindev.ui.data
+
+import android.content.Context
+import android.text.TextUtils
+import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.LinearLayout
+import androidx.core.content.ContextCompat
+import androidx.paging.PagingDataAdapter
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.RecyclerView
+import com.glance.guolindev.R
+import com.glance.guolindev.databinding.GlanceLibraryRowItemBinding
+import com.glance.guolindev.extension.dp
+import com.glance.guolindev.extension.setOnDoubleClickListener
+import com.glance.guolindev.logic.model.Column
+import com.glance.guolindev.logic.model.Row
+import com.glance.guolindev.view.TableCellView
+import com.glance.guolindev.view.TableRowLayout
+
+/**
+ * This is adapter of RecyclerView to display data from a table. Using PagingDataAdapter as parent
+ * to implement the paging job.
+ *
+ * @author guolin
+ * @since 2020/9/22
+ */
+class DataAdapter(
+    private val activity: DataActivity,
+    private val columns: List<Column>,
+    private val rowWidth: Int
+) : PagingDataAdapter<Row, DataAdapter.ViewHolder>(COMPARATOR) {
+
+    lateinit var context: Context
+
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        if (!::context.isInitialized) context = parent.context
+        val rowLayoutBinding = GlanceLibraryRowItemBinding.inflate(LayoutInflater.from(context), parent, false)
+        val holder = ViewHolder(rowLayoutBinding.root)
+        val param = rowLayoutBinding.root.layoutParams
+        param.width = rowWidth
+        for (column in columns) {
+            val tableCellView = buildTableCellView()
+            // We let each column has 20dp extra space, to make it look better.
+            val layoutParam = LinearLayout.LayoutParams(column.width + 20.dp, LinearLayout.LayoutParams.MATCH_PARENT)
+            rowLayoutBinding.root.addView(tableCellView, layoutParam)
+
+            // Set double click listener to modify the value in TableCellView.
+            tableCellView.setOnDoubleClickListener {
+                val position = holder.bindingAdapterPosition
+                val row = getItem(position)
+                if (row != null && it is TableCellView) {
+                    activity.showModifyValueDialog(position, row, it.columnIndex)
+                }
+            }
+        }
+        return holder
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val row = getItem(position)
+        if (row != null) {
+            val rowLayout = holder.itemView as TableRowLayout
+            val backgroundColorRes = if (position % 2 == 0) {
+                R.color.glance_library_table_even_row_bg
+            } else {
+                R.color.glance_library_table_odd_row_bg
+            }
+            rowLayout.setBackgroundColor(ContextCompat.getColor(context, backgroundColorRes))
+            for (i in (0 until rowLayout.childCount)) {
+                val tableCellView = rowLayout.getChildAt(i) as TableCellView
+                tableCellView.columnIndex = i
+                tableCellView.row = row
+            }
+        }
+    }
+
+    /**
+     * Build a TextView widget as a table cell to show data in a row.
+     */
+    private fun buildTableCellView(): TableCellView {
+        val tableCellView = TableCellView(context)
+        tableCellView.gravity = Gravity.CENTER_VERTICAL
+        // Actually each column has 20dp extra space, but we only use 10 in padding.
+        // This makes each column has more space to show their content before be ellipsized.
+        tableCellView.setPadding(5.dp, 0, 5.dp, 0)
+        tableCellView.setSingleLine()
+        tableCellView.ellipsize = TextUtils.TruncateAt.END
+        tableCellView.setTextColor(ContextCompat.getColor(context, R.color.glance_library_table_text))
+
+        return tableCellView
+    }
+
+    companion object {
+        private val COMPARATOR = object : DiffUtil.ItemCallback<Row>() {
+            override fun areItemsTheSame(oldItem: Row, newItem: Row): Boolean =
+                oldItem.lineNum == newItem.lineNum
+
+            override fun areContentsTheSame(oldItem: Row, newItem: Row): Boolean =
+                oldItem == newItem
+        }
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\ui\data\DataFooterAdapter.kt --- 
+ 
+package com.glance.guolindev.ui.data
+
+import android.content.Context
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+import com.glance.guolindev.R
+import com.glance.guolindev.databinding.GlanceLibraryDataFooterBinding
+import com.glance.guolindev.extension.toNumericString
+import com.glance.guolindev.view.FooterTextView
+
+/**
+ * The footer adapter to show how many records are loaded.
+ *
+ * @author guolin
+ * @since 2020/9/30
+ */
+class DataFooterAdapter(private val layoutWidth: Int, private val screenWidth: Int, private val block: () -> Int) : RecyclerView.Adapter<DataFooterAdapter.ViewHolder>() {
+
+    private lateinit var context: Context
+
+    /**
+     * We do not display footer at first. Only when main data are loaded, we show the footer.
+     */
+    private var displayFooter = false
+
+    /**
+     * This is the widget to show how many records are loaded.
+     */
+    private lateinit var footerTextView: FooterTextView
+
+    class ViewHolder(itemView: TextView) : RecyclerView.ViewHolder(itemView)
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        if (!::context.isInitialized) context = parent.context
+        val footerBinding = GlanceLibraryDataFooterBinding.inflate(LayoutInflater.from(context), parent, false)
+        footerBinding.root.screenWidth = screenWidth.toFloat()
+        footerBinding.root.layoutParams.width = layoutWidth
+        return ViewHolder(footerBinding.root)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val recordCount = block()
+        val text = if (recordCount > 1) {
+            context.resources.getString(R.string.glance_library_records_loaded)
+        } else {
+            context.resources.getString(R.string.glance_library_record_loaded)
+        }
+        if (!::footerTextView.isInitialized) {
+            footerTextView = holder.itemView as FooterTextView
+        }
+        footerTextView.text = String.format(text, recordCount.toNumericString())
+    }
+
+    override fun getItemCount() = if (displayFooter) 1 else 0
+
+    /**
+     * Display the footer to show how many records are loaded.
+     */
+    fun displayFooter() {
+        if (!displayFooter) {
+            // Once footer is displayed, we don't execute it anymore for better performance.
+            displayFooter = true
+            notifyDataSetChanged()
+        }
+    }
+
+    /**
+     * Notify FooterTextView the horizontal scroll amount to invalidate the view.
+     */
+    fun notifyScrollXChanged(scrollX: Float){
+        if (::footerTextView.isInitialized) {
+            footerTextView.notifyScrollXChanged(scrollX)
+        }
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\ui\data\DataViewModel.kt --- 
+ 
+package com.glance.guolindev.ui.data
+
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.paging.cachedIn
+import com.glance.guolindev.Glance
+import com.glance.guolindev.R
+import com.glance.guolindev.logic.model.*
+import com.glance.guolindev.logic.repository.DatabaseRepository
+import com.glance.guolindev.logic.typechange.BLOB_FIELD_TYPE
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.launch
+
+/**
+ * DataViewModel holds view data of DataActivity and provide api to specific data operations of table.
+ *
+ * @author guolin
+ * @since 2020/9/13
+ */
+class DataViewModel(private val repository: DatabaseRepository) : ViewModel() {
+
+    /**
+     * The LiveData variable to observe get columns result.
+     */
+    val columnsLiveData: LiveData<List<Column>>
+        get() = _columnsLiveData
+
+    /**
+     * The LiveData variable to observe update data result.
+     */
+    val updateDataLiveData: LiveData<Resource<UpdateBean?>>
+        get() = _updateDataLiveData
+
+    /**
+     * The LiveData variable to observe exceptions happened in this ViewModel.
+     */
+    val errorLiveData: LiveData<Throwable>
+        get() = _errorLiveData
+
+    private val _columnsLiveData = MutableLiveData<List<Column>>()
+
+    private val _updateDataLiveData = MutableLiveData<Resource<UpdateBean?>>()
+
+    private val _errorLiveData = MutableLiveData<Throwable>()
+
+    private val handler = CoroutineExceptionHandler { _, throwable ->
+        _errorLiveData.value = throwable
+    }
+
+    /**
+     * Get the columns of a table.
+     */
+    fun getColumnsInTable(table: String) = viewModelScope.launch(handler) {
+        val columns = repository.getColumnsInTable(table)
+        _columnsLiveData.value = columns
+    }
+
+    /**
+     * Update data in a specific table by primary key. So there must be a primary key in table.
+     */
+    fun updateDataInTable(updateBean: UpdateBean) = viewModelScope.launch {
+        try {
+            val table = updateBean.table
+            val row = updateBean.row
+            val columnIndex = updateBean.columnIndex
+            val updateColumnName = row.dataList[columnIndex].columnName
+            val updateColumnType = row.dataList[columnIndex].columnType
+            val oldValue = row.dataList[columnIndex].value
+            val updateValue = updateBean.updateValue
+            var primaryKey: Data? = null
+            var updateColumnValid = false
+            if (updateColumnType == BLOB_FIELD_TYPE) {
+                _updateDataLiveData.value =
+                    Resource.error(Glance.context.getString(R.string.glance_library_update_failed_blob_column_can_not_be_modified))
+                return@launch
+            }
+            for (data in row.dataList) {
+                if (data.isPrimaryKey) {
+                    primaryKey = data
+                }
+                if (data.columnName == updateColumnName) {
+                    updateColumnValid = true
+                }
+                if (primaryKey != null && updateColumnValid) {
+                    break
+                }
+            }
+            if (primaryKey == null || !updateColumnValid) {
+                _updateDataLiveData.value = if (primaryKey == null) {
+                    Resource.error(
+                        String.format(
+                            Glance.context.getString(R.string.glance_library_update_failed_table_does_not_have_primary_key),
+                            table
+                        )
+                    )
+                } else {
+                    Resource.error(
+                        String.format(
+                            Glance.context.getString(R.string.glance_library_update_failed_update_column_name_is_invliad),
+                            table
+                        )
+                    )
+                }
+                return@launch
+            }
+            if (oldValue == updateValue) {
+                _updateDataLiveData.value =
+                    Resource.error(Glance.context.getString(R.string.glance_library_data_not_changed))
+                return@launch
+            }
+            val affectedRows = repository.updateDataInTableByPrimaryKey(
+                table,
+                primaryKey,
+                updateColumnName,
+                updateColumnType,
+                updateValue
+            )
+            if (affectedRows == 1) {
+                _updateDataLiveData.value = Resource.success(updateBean)
+            } else {
+                _updateDataLiveData.value =
+                    Resource.error(
+                        String.format(
+                            Glance.context.getString(R.string.glance_library_update_failed_update_abnormal),
+                            affectedRows
+                        )
+                    )
+            }
+        } catch (e: Exception) {
+            _updateDataLiveData.value = Resource.error(
+                String.format(
+                    Glance.context.getString(R.string.glance_library_update_failed),
+                    e.message
+                )
+            )
+        }
+    }
+
+    /**
+     * Get the flow to load data from specific table.
+     */
+    fun loadDataFromTable(table: String, columns: List<Column>) =
+        repository.getDataFromTableStream(table, columns).cachedIn(viewModelScope)
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\ui\data\DataViewModelFactory.kt --- 
+ 
+package com.glance.guolindev.ui.data
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.glance.guolindev.logic.util.ServiceLocator
+
+/**
+ * The ViewModel Factory to create DataViewModel instance and pass a DatabaseRepository instance as parameter which provided by ServiceLocator.
+ *
+ * @author guolin
+ * @since 2020/9/4
+ */
+class DataViewModelFactory : ViewModelProvider.Factory {
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return DataViewModel(ServiceLocator.provideTableRepository()) as T
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\ui\db\DBActivity.kt --- 
+  
+package com.glance.guolindev.ui.db
+
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+import android.view.View
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.glance.guolindev.Glance
+import com.glance.guolindev.R
+import com.glance.guolindev.databinding.GlanceLibraryActivityDbBinding
+import com.glance.guolindev.logic.model.DBFile
+
+/**
+ * Databases layer of Activity, which shows all the databases file found by Glance.
+ * Glance will scan the internal and external storage of current app and display all the files named end with .db.
+ *
+ * @author guolin
+ * @since 2020/8/25
+ */
+class DBActivity : AppCompatActivity() {
+
+    private val dbViewModel by lazy { ViewModelProvider(this, DBViewModelFactory()).get(DBViewModel::class.java) }
+
+    private lateinit var binding: GlanceLibraryActivityDbBinding
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // Use host app name to be the Glance launcher activity name in case of confusion when many apps integrate Glance.
+        title = Glance.context.applicationInfo.loadLabel(packageManager).toString()
+        binding = GlanceLibraryActivityDbBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        val dbList = ArrayList<DBFile>()
+        val adapter = DBAdapter(dbList)
+        val layoutManager = LinearLayoutManager(this)
+        binding.recyclerView.adapter = adapter
+        binding.recyclerView.layoutManager = layoutManager
+        adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                // When new item inserted by DiffUtil in adapter, we always scroll to the top to show the lasted db file to user.
+                if (savedInstanceState == null) {
+                    // We only scroll to the top when savedInstanceState is null.
+                    // This can avoid scrolling to top every time when device rotates.
+                    binding.recyclerView.scrollToPosition(0)
+                }
+            }
+        })
+        dbViewModel.dbListLiveData.observe(this) { newDBList ->
+            val diffResult = DiffUtil.calculateDiff(DBDiffCallback(dbList, newDBList))
+            dbList.clear()
+            dbList.addAll(newDBList)
+            diffResult.dispatchUpdatesTo(adapter)
+            val title = if (adapter.itemCount <= 1) {
+                "${adapter.itemCount} ${getString(R.string.glance_library_database_found)}"
+            } else {
+                "${adapter.itemCount} ${getString(R.string.glance_library_databases_found)}"
+            }
+            binding.titleText.text = title
+            if (adapter.itemCount > 0) {
+                binding.noDbTextView.visibility = View.INVISIBLE
+                binding.recyclerView.visibility = View.VISIBLE
+            } else {
+                binding.noDbTextView.visibility = View.VISIBLE
+                binding.recyclerView.visibility = View.INVISIBLE
+            }
+        }
+        dbViewModel.progressLiveData.observe(this) {
+            binding.progressBar.visibility = if (it) {
+                // start loading
+                View.VISIBLE
+            } else {
+                // finish loading
+                View.INVISIBLE
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (dbViewModel.dbListLiveData.value == null) { // When there's no data on ui, we load and refresh db files.
+            dbViewModel.loadAndRefreshDBFiles()
+        } else { // Otherwise, we only refresh db files to show the latest data.
+            dbViewModel.refreshDBFiles()
+        }
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\ui\db\DBAdapter.kt --- 
+ 
+package com.glance.guolindev.ui.db
+
+import android.content.Context
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import android.widget.TextView
+import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.RecyclerView
+import com.glance.guolindev.R
+import com.glance.guolindev.databinding.GlanceLibraryDbItemBinding
+import com.glance.guolindev.extension.exists
+import com.glance.guolindev.extension.isValidDBFile
+import com.glance.guolindev.extension.setExtraMarginForFirstAndLastItem
+import com.glance.guolindev.logic.model.DBFile
+import com.glance.guolindev.ui.table.TableActivity
+import com.google.android.material.card.MaterialCardView
+import java.text.SimpleDateFormat
+import java.util.*
+
+/**
+ * Adapter for the RecyclerView to show all the db files of current app.
+ *
+ * @author guolin
+ * @since 2020/8/26
+ */
+class DBAdapter(private val dbList: List<DBFile>) : RecyclerView.Adapter<DBAdapter.ViewHolder>() {
+
+    lateinit var context: Context
+
+    class ViewHolder(dbItemBinding: GlanceLibraryDbItemBinding) : RecyclerView.ViewHolder(dbItemBinding.root) {
+        val storageLayout: MaterialCardView = dbItemBinding.storageLayout
+        val storageText: TextView = dbItemBinding.storageText
+        val dbNameText: TextView = dbItemBinding.dbNameText
+        val dbPathText: TextView = dbItemBinding.dbPathText
+        val modifyTimeText: TextView = dbItemBinding.modifyTimeText
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        if (!::context.isInitialized) context = parent.context
+        val dbItemBinding = GlanceLibraryDbItemBinding.inflate(LayoutInflater.from(context), parent, false)
+        val holder = ViewHolder(dbItemBinding)
+        holder.itemView.setOnClickListener {
+            val position = holder.bindingAdapterPosition
+            val dbFile = dbList[position]
+            if (!dbFile.exists()) {
+                Toast.makeText(parent.context, R.string.glance_library_this_file_does_not_exist_anymore, Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            } else if (!dbFile.isValidDBFile()) {
+                Toast.makeText(parent.context, R.string.glance_library_this_is_not_a_valid_db_file, Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            TableActivity.actionOpenDatabase(parent.context, dbFile.name, dbFile.path)
+        }
+        return holder
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        holder.setExtraMarginForFirstAndLastItem(position == 0, position == dbList.size - 1)
+        val dbFile = dbList[position]
+        holder.dbNameText.text = dbFile.name
+        holder.dbPathText.text = dbFile.path
+        if (dbFile.internal) {
+            holder.storageText.setText(R.string.glance_library_internal_storage)
+            holder.storageLayout.setCardBackgroundColor(ContextCompat.getColor(context,
+                R.color.glance_library_db_card_internal_storage_db))
+        } else {
+            holder.storageText.setText(R.string.glance_library_external_storage)
+            holder.storageLayout.setCardBackgroundColor(ContextCompat.getColor(context,
+                R.color.glance_library_db_card_external_storage_db))
+        }
+        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US)
+        val modifyTime = simpleDateFormat.format(dbFile.modifyTime)
+        holder.modifyTimeText.text = String.format(context.getString(R.string.glance_library_last_modified), modifyTime)
+    }
+
+    override fun getItemCount() = dbList.size
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\ui\db\DBDiffCallback.kt --- 
+ 
+package com.glance.guolindev.ui.db
+
+import androidx.recyclerview.widget.DiffUtil
+import com.glance.guolindev.logic.model.DBFile
+
+/**
+ * DiffUtil callback implementation to help recyclerview know how to converts the old list into the new list.
+ *
+ * @author guolin
+ * @since 2020/8/28
+ */
+class DBDiffCallback(private val oldList: List<DBFile>, private val newList: List<DBFile>) : DiffUtil.Callback() {
+
+    override fun getOldListSize() = oldList.size
+
+    override fun getNewListSize() = newList.size
+
+    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        return oldList[oldItemPosition].path == newList[newItemPosition].path
+    }
+
+    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        return oldList[oldItemPosition] == newList[newItemPosition]
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\ui\db\DBViewModel.kt --- 
+ 
+package com.glance.guolindev.ui.db
+
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.glance.guolindev.logic.model.DBFile
+import com.glance.guolindev.logic.repository.FileRepository
+import kotlinx.coroutines.launch
+
+/**
+ * DBViewModel holds view data of DBActivity and provide api to specific db operations.
+ *
+ * @author guolin
+ * @since 2020/8/25
+ */
+class DBViewModel(private val repository: FileRepository) : ViewModel() {
+
+    /**
+     * The LiveData variable to observe db file list.
+     */
+    val dbListLiveData: LiveData<List<DBFile>>
+        get() = _dbListLiveData
+
+    private val _dbListLiveData = MutableLiveData<List<DBFile>>()
+
+    /**
+     * The LiveData variable to observe loading status.
+     */
+    val progressLiveData: LiveData<Boolean>
+        get() = _progressLiveData
+
+    private val _progressLiveData = MutableLiveData<Boolean>()
+
+    /**
+     * Load the db files from cache immediately and show them on UI.
+     * Then scan all db files of current app.
+     */
+    fun loadAndRefreshDBFiles() = viewModelScope.launch {
+        _progressLiveData.value = true // start loading
+        // Load db files from cache and show the on UI immediately.
+        val cachedDBList = repository.loadCachedDbFiles()
+        _dbListLiveData.value = cachedDBList
+        _progressLiveData.value = false // finish loading
+
+        refreshDBFiles()
+    }
+
+    /**
+     * Scan all db files of current app, then refresh the ui of current app.
+     */
+    fun refreshDBFiles() = viewModelScope.launch {
+        _progressLiveData.value = true // start loading
+        // Scan all db files of current app and update the UI with DiffUtil.
+        val scannedDBList = repository.scanAllDBFiles()
+        _dbListLiveData.value = scannedDBList
+
+        // Update the cache with lasted data.
+        repository.cacheDbFiles(scannedDBList)
+        _progressLiveData.value = false // finish loading
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\ui\db\DBViewModelFactory.kt --- 
+ 
+package com.glance.guolindev.ui.db
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.glance.guolindev.logic.util.ServiceLocator
+
+/**
+ * The ViewModel Factory to create DBViewModel instance and pass a DBRepository instance as parameter which provided by ServiceLocator.
+ *
+ * @author guolin
+ * @since 2020/9/4
+ */
+class DBViewModelFactory : ViewModelProvider.Factory {
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return DBViewModel(ServiceLocator.provideDBRepository()) as T
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\ui\table\TableActivity.kt --- 
+ 
+package com.glance.guolindev.ui.table
+
+import android.content.Context
+import android.content.Intent
+import android.os.Bundle
+import android.view.MenuItem
+import android.view.View
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.glance.guolindev.R
+import com.glance.guolindev.databinding.GlanceLibraryActivityTableBinding
+import com.glance.guolindev.logic.model.Resource
+import com.glance.guolindev.logic.model.Table
+
+/**
+ * Table layer of Activity, which shows all tables in a specific database file.
+ *
+ * @author guolin
+ * @since 2020/9/4
+ */
+class TableActivity : AppCompatActivity() {
+
+    private val viewModel by lazy { ViewModelProvider(this, TableViewModelFactory()).get(TableViewModel::class.java) }
+
+    private lateinit var binding: GlanceLibraryActivityTableBinding
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = GlanceLibraryActivityTableBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        val dbName = intent.getStringExtra(DB_NAME)
+        val dbPath = intent.getStringExtra(DB_PATH)
+        if (dbPath == null) {
+            Toast.makeText(this, R.string.glance_library_db_path_is_null, Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+        setSupportActionBar(binding.toolbar)
+        val actionBar = supportActionBar
+        actionBar?.setDisplayHomeAsUpEnabled(true)
+        actionBar?.title = dbName
+
+        val tableList = ArrayList<Table>()
+        val adapter = TableAdapter(tableList)
+        val layoutManager = LinearLayoutManager(this)
+        adapter.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
+        binding.recyclerView.adapter = adapter
+        binding.recyclerView.layoutManager = layoutManager
+
+        viewModel.tablesLiveData.observe(this) {
+            when (it.status) {
+                Resource.SUCCESS -> {
+                    binding.loadingGroup.visibility = View.INVISIBLE
+                    binding.contentGroup.visibility = View.VISIBLE
+                    tableList.clear()
+                    tableList.addAll(it.data!!)
+                    adapter.notifyDataSetChanged()
+                }
+                Resource.LOADING -> {
+                    binding.loadingGroup.visibility = View.VISIBLE
+                    binding.contentGroup.visibility = View.INVISIBLE
+                }
+                Resource.ERROR -> {
+                    binding.loadingGroup.visibility = View.INVISIBLE
+                    binding.contentGroup.visibility = View.INVISIBLE
+                    Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+        if (viewModel.tablesLiveData.value == null) {
+            viewModel.getAllTablesInDB(dbPath)
+        }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            android.R.id.home -> {
+                finish()
+                return true
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    companion object {
+
+        const val DB_NAME = "db_name"
+        const val DB_PATH = "db_path"
+
+        fun actionOpenDatabase(context: Context, dbName: String, dbPath: String) {
+            val intent = Intent(context, TableActivity::class.java)
+            intent.putExtra(DB_NAME, dbName)
+            intent.putExtra(DB_PATH, dbPath)
+            context.startActivity(intent)
+        }
+    }
+}
+ 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\ui\table\TableAdapter.kt --- 
+ 
+package com.glance.guolindev.ui.table
+
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+import com.glance.guolindev.databinding.GlanceLibraryTableItemBinding
+import com.glance.guolindev.extension.setExtraMarginForFirstAndLastItem
+import com.glance.guolindev.logic.model.Table
+import com.glance.guolindev.ui.data.DataActivity
+
+/**
+ * Adapter for the RecyclerView to show all tables in db file.
+ *
+ * @author guolin
+ * @since 2020/9/10
+ */
+class TableAdapter(private val tableList: List<Table>) : RecyclerView.Adapter<TableAdapter.ViewHolder>() {
+
+    class ViewHolder(tableItemBinding: GlanceLibraryTableItemBinding) : RecyclerView.ViewHolder(tableItemBinding.root) {
+        val tableNameText: TextView = tableItemBinding.tableNameText
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val tableItemBinding = GlanceLibraryTableItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val holder = ViewHolder(tableItemBinding)
+        holder.itemView.setOnClickListener {
+            val position = holder.bindingAdapterPosition
+            val table = tableList[position]
+            DataActivity.actionOpenTable(parent.context, table.name)
+        }
+        return holder
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        holder.setExtraMarginForFirstAndLastItem(position == 0, position == tableList.size - 1)
+        val table = tableList[position]
+        holder.tableNameText.text = table.name
+    }
+
+    override fun getItemCount() = tableList.size
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\ui\table\TableViewModel.kt --- 
+ 
+package com.glance.guolindev.ui.table
+
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.glance.guolindev.Glance
+import com.glance.guolindev.R
+import com.glance.guolindev.logic.model.Resource
+import com.glance.guolindev.logic.model.Table
+import com.glance.guolindev.logic.repository.DatabaseRepository
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.launch
+
+/**
+ * TableViewModel holds view data of TableActivity and provide api to specific table operations.
+ *
+ * @author guolin
+ * @since 2020/9/4
+ */
+class TableViewModel(private val repository: DatabaseRepository) : ViewModel() {
+
+    /**
+     * The LiveData variable to observe db file list.
+     */
+    val tablesLiveData: LiveData<Resource<List<Table>>>
+        get() = _tablesLiveData
+
+    private val _tablesLiveData = MutableLiveData<Resource<List<Table>>>()
+
+    private val handler = CoroutineExceptionHandler { _, throwable ->
+        _tablesLiveData.value = Resource.error(throwable.message
+                ?: Glance.context.getString(R.string.glance_library_uncaught_exception_happened))
+    }
+
+    /**
+     * Get all tables in a specific db file represented by the [dbPath] parameter.
+     */
+    fun getAllTablesInDB(dbPath: String) = viewModelScope.launch(handler) {
+        _tablesLiveData.value = Resource.loading()
+        _tablesLiveData.value = Resource.success(repository.getSortedTablesInDB(dbPath))
+    }
+
+    /**
+     * When the lifecycle of TableViewModel finished, we close the opened database.
+     */
+    override fun onCleared() {
+        closeDatabase()
+    }
+
+    /**
+     * Close the opened database.
+     */
+    private fun closeDatabase() = viewModelScope.launch(handler) {
+        repository.closeDatabase()
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\ui\table\TableViewModelFactory.kt --- 
+ 
+package com.glance.guolindev.ui.table
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.glance.guolindev.logic.util.ServiceLocator
+
+/**
+ * The ViewModel Factory to create TableViewModel instance and pass a DatabaseRepository instance as parameter which provided by ServiceLocator.
+ *
+ * @author guolin
+ * @since 2020/9/4
+ */
+class TableViewModelFactory : ViewModelProvider.Factory {
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return TableViewModel(ServiceLocator.provideTableRepository()) as T
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\view\FooterTextView.kt --- 
+ 
+package com.glance.guolindev.view
+
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Rect
+import android.util.AttributeSet
+import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.content.ContextCompat
+import com.glance.guolindev.R
+
+/**
+ * Custom FooterTextView to show the footer text info.
+ * The main goal of this view is that it can always display the text at the horizontal center of the screen.
+ * Even if we scroll the HorizontalScrollView with any horizontal distance.
+ *
+ * @author guolin
+ * @since 2020/10/1
+ */
+class FooterTextView(context: Context, attrs: AttributeSet? = null) : AppCompatTextView(context, attrs) {
+
+    /**
+     * This indicate the horizontal scroll distance by HorizontalScrollView.
+     */
+    private var scrollX = 0f
+
+    /**
+     * Use this Rect to get the bounds of displayed text.
+     */
+    private val rect = Rect()
+
+    /**
+     * This is important. We want the text always displayed at the center of the screen, so we must
+     * know exactly how the screen width is.
+     */
+    var screenWidth = 0f
+
+    init {
+        paint.color = ContextCompat.getColor(context, R.color.glance_library_table_text)
+    }
+
+    /**
+     * We always draw the text at the center of the screen.
+     */
+    override fun onDraw(canvas: Canvas) {
+        val text= text.toString()
+        val textWidth = paint.measureText(text)
+        val leftEdge = scrollX
+        val rightEdge = scrollX + screenWidth
+        // This is the center position on x axis of the visible screen.
+        val x = (leftEdge + rightEdge) / 2 - textWidth / 2
+        paint.getTextBounds(text, 0, text.length, rect)
+        val offset = (rect.top + rect.bottom) / 2f
+        val y = height / 2f - offset
+        // Display the text at center
+        canvas.drawText(text, x, y, paint)
+    }
+
+    /**
+     * Notify the horizontal scroll amount the invalidate self to redraw the text at center.
+     */
+    fun notifyScrollXChanged(scrollX: Float) {
+        this.scrollX = scrollX
+        invalidate()
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\view\HorizontalScroller.kt --- 
+ 
+package com.glance.guolindev.view
+
+import android.content.Context
+import android.util.AttributeSet
+import android.view.MotionEvent
+import android.widget.HorizontalScrollView
+
+/**
+ * Custom HorizontalScrollView with scroll listener function.
+ * We can call [setScrollObserver] to set a observer, and get notified when HorizontalScroller is scrolled.
+ *
+ * @author guolin
+ * @since 2020/10/2
+ */
+class HorizontalScroller(context: Context, attrs: AttributeSet? = null) : HorizontalScrollView(context, attrs)  {
+
+    private lateinit var scrollObserver: (Float) -> Unit
+
+    override fun onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
+        super.onScrollChanged(l, t, oldl, oldt)
+        if (::scrollObserver.isInitialized) {
+            scrollObserver(l.toFloat())
+        }
+    }
+
+    /**
+     * Set a observer, and get notified when HorizontalScroller is scrolled.
+     */
+    fun setScrollObserver(observer: (Float) -> Unit) {
+        scrollObserver = observer
+    }
+
+    /**
+     * deal with the motion event to scroll, while passing the event downwards
+     */
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        onTouchEvent(ev)
+        return super.dispatchTouchEvent(ev)
+    }
+
+    /**
+     * do not intercept touch event so that child scrollable view can also receive event to scroll
+     */
+    override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean = false
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\view\TableCellView.kt --- 
+ 
+package com.glance.guolindev.view
+
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.util.AttributeSet
+import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.content.ContextCompat
+import com.glance.guolindev.R
+import com.glance.guolindev.extension.dp
+import com.glance.guolindev.logic.model.Row
+
+/**
+ * Custom view to represent a table cell. Draw the border(only left border is needed) for the cell when necessary.
+ *
+ * @author guolin
+ * @since 2020/9/27
+ */
+class TableCellView(context: Context, attrs: AttributeSet? = null) : AppCompatTextView(context, attrs) {
+
+    /**
+     * Use this paint to draw border of table.
+     */
+    private val borderPaint = Paint()
+
+    /**
+     * Record the first timestamp this view is clicked.
+     */
+    internal var firstClickTimeStamp = 0L
+
+    /**
+     * Keep the column index of current table row.
+     */
+    var columnIndex = -1
+
+    /**
+     * Keep the row data of current table row.
+     */
+    var row: Row? = null
+        set(value) {
+            field = value
+            if (columnIndex != -1) { // This means we always need to set columnIndex before we set row.
+                text = value?.let {
+                    it.dataList[columnIndex].value
+                } ?: ""
+            }
+        }
+
+    init {
+        borderPaint.color = ContextCompat.getColor(context, R.color.glance_library_table_border)
+        borderPaint.strokeWidth = 1f.dp
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        if (columnIndex != -1 && columnIndex != 0) {
+            // We don't draw the left border if it's first cell.
+            canvas.drawLine(0f, 0f, 0f, height.toFloat(), borderPaint)
+        }
+        super.onDraw(canvas)
+    }
+
+} 
+--- File: D:\GEMINI\temp\GlanceDB\app\src\main\java\com\glance\guolindev\view\TableRowLayout.kt --- 
+ 
+package com.glance.guolindev.view
+
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.util.AttributeSet
+import android.widget.LinearLayout
+import androidx.core.content.ContextCompat
+import com.glance.guolindev.R
+import com.glance.guolindev.extension.dp
+
+/**
+ * Custom view to represent a row of the table. Draw the top and bottom border for the row when necessary.
+ *
+ * @author guolin
+ * @since 2020/9/27
+ */
+class TableRowLayout(context: Context, attrs: AttributeSet? = null) : LinearLayout(context, attrs) {
+
+    /**
+     * Use this paint to draw border of table.
+     */
+    private val borderPaint = Paint()
+
+    init {
+        setWillNotDraw(false) // Layout may not call onDraw(), so we need to disable that.
+        borderPaint.color = ContextCompat.getColor(context, R.color.glance_library_table_border)
+        borderPaint.strokeWidth = 1f.dp
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        canvas.drawLine(0f, height.toFloat() - 0.5f, width.toFloat(), height.toFloat() - 0.5f, borderPaint)
+        super.onDraw(canvas)
+    }
+
+} 
