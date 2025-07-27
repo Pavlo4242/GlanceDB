@@ -24,4 +24,10 @@ import java.util.*
  * @author guolin
  * @since 2020/8/24
  */
-data class DBFile(val name: String, val path: String, val internal: Boolean, val modifyTime: Date)
+data class DBFile(val name: String, val path: String, val internal: Boolean, val modifyTime: Date) {
+    fun isRoomDatabase(): Boolean {
+        return name.contains("translator_database") || 
+               name.contains("room") || 
+               name.contains("app_database")
+    }
+}
