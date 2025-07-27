@@ -71,6 +71,7 @@ class TableActivity : AppCompatActivity() {
                 Resource.SUCCESS -> {
                     binding.loadingGroup.visibility = View.INVISIBLE
                     binding.contentGroup.visibility = View.VISIBLE
+                    tableList.clear()
                     tableList.addAll(it.data!!)
                     adapter.notifyDataSetChanged()
                 }
@@ -111,7 +112,5 @@ class TableActivity : AppCompatActivity() {
             intent.putExtra(DB_PATH, dbPath)
             context.startActivity(intent)
         }
-
     }
-
 }
